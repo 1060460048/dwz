@@ -56,6 +56,7 @@ class DwzPager extends CBasePager
 	public $htmlOptions=array();
 	//
 
+
 	/**
 	 * 初始化一些默认设置
 	 */
@@ -98,4 +99,27 @@ class DwzPager extends CBasePager
 		echo CHtml::dropDownList('numPerPage', $this->getPageSize(), $this->numPerPageList, array('onchange'=>'navTabPageBreak({numPerPage:this.value})'));
 		echo "<span>条，共{$this->getItemCount()}条,{$pageCount}页</span>\n</div>\n";
 	}
+
+
+
+    /**
+     * Creates a page button.
+     * You may override this method to customize the page buttons.
+     * @param string $label the text label for the button
+     * @param integer $page the page number
+     * @param string $class the CSS class for the page button. This could be 'page', 'first', 'last', 'next' or 'previous'.
+     * @param boolean $hidden whether this page button is visible
+     * @param boolean $selected whether this page button is selected
+     * @return string the generated button
+     */
+    protected function createPageButton($label,$page,$class,$hidden,$selected,$linkType='')
+    {
+        if($hidden || $selected){
+            if (($label!=$this->firstPageLabel) and ($label!=$this->nextPageLabel)and($label!=$this->prevPageLabel)and($label!=$this->lastPageLabel))
+            {return '<span style="color:red;">'.$label.'</span>'; }//自定义的当前页样式
+            else
+                return '<span style="display:none;">'.$label.'</span>';
+        }
+        return CHtml::link($label,$this->createPageUrl($page),$this->linkType); //在dwz的navTab对象中打开
+    }
 }

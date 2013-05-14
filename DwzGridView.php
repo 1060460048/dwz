@@ -73,12 +73,24 @@ class DwzGridView extends CGridView
             $assetsUrl = Yii::app()->assetManager->publish($assetsPath);
         }
         $this->baseScriptUrl = $assetsUrl . '/gridview';
-        parent::init();
+
+        //-------------------------------------------------------------------\\
+        if($this->dataProvider===null)
+            throw new CException(Yii::t('zii','The "dataProvider" property cannot be empty.'));
         $dp = $this->dataProvider;
         $pageVar = $dp->pagination->pageVar;
+        /**
+         * 核心问题就是用POST过来的当前页面重设掉get过来的当前页面！
+         * 要赶在 $this->dataProvider->getData();之前把pageVar重设掉
+         * 而恰恰是在parent::init() 中做了这个事所以需要在parent::init() 方法之前
+         * 重设pageVar的值！！
+         */
         if (isset($_POST['pageNum'])) {
             $_GET[$pageVar] = $_POST['pageNum'] ;
         }
+
+        //-------------------------------------------------------------------//
+        parent::init();
 
     }
 
@@ -162,24 +174,16 @@ class DwzGridView extends CGridView
         }");
     }
 
-    protected function renderPageForm($return = true)
-    {
-        $pagination = $this->dataProvider->getPagination();
-        $controller = Yii::app()->getController();
-        $url = $pagination->createPageUrl($controller, $pagination->currentPage);
-        $pageForm = <<<PF
-<form id="pagerForm" action="{$url}" method="post">
-      <input type="hidden" name="pageNum" value="1" />/><!--【必须】value=1可以写死-->
 
-      <!--【可选】其它查询条件，业务有关，有什么查询条件就加什么参数。
-      也可以在searchForm上设置属性rel=”pagerForm”，js框架会自动把searchForm搜索条件复制到pagerForm中 -->
-</form>
-PF;
-        if ($return == true) {
-            return $pageForm;
-        } else {
-            echo $pageForm;
-        }
+    public function renderPager1()
+    {
+        //使用了clinkpagerchina组件。太阳浴血
+        $pages=$this->dataProvider->getPagination();
+        //$linkType=array('target'=>'navTab','rel'=>'art_manager');
+        echo '<div class="panelBar" style="text-align:right;padding:6px;"><span style="float:left;">'.'dddd'.'</span><span>';
+        //$this->widget('ext.dwz.DwzPager2',array('pages'=>$pages,'linkType'=>array('target'=>'navTab','rel'=>'art_manager')));
+        parent::renderPager() ;
+        echo '</span></div>';
     }
 
     public function renderPager()
@@ -194,7 +198,7 @@ PF;
         $totalCount = $pagination->getItemCount();
         $numPerPage = $pagination->getPageSize();
         $pageNumShown = $pagination->getPageCount();
-        $currentPage = $pagination->getCurrentPage() +1;
+        $currentPage = $pagination->getCurrentPage()+1 ;
 
         $pagerHtml = <<<PAGER
 <div class="panelBar">
@@ -208,5 +212,35 @@ PF;
 PAGER;
         echo $pagerHtml;
         $this->renderPageForm(false);
+    }
+
+    protected function renderPageForm($return = true)
+    {
+        $pagination = $this->dataProvider->getPagination();
+        $controller = Yii::app()->getController();
+        $url = $pagination->createPageUrl($controller, $pagination->currentPage);
+
+        $dwzCurrentPageNum = 0;
+        if($_POST['pageNum']){
+            $dwzCurrentPageNum = $_POST['pageNum'];
+        }
+
+        $pageVar = $pagination->pageVar;
+
+        $yiiPageNum =    $_GET[$pageVar] ;
+
+        $pageForm = <<<PF
+<form id="pagerForm" action="{$url}" method="post">
+      <input type="hidden" name="pageNum" value="{$dwzCurrentPageNum}" />/><!--【必须】value=1可以写死-->
+        {$yiiPageNum}
+      <!--【可选】其它查询条件，业务有关，有什么查询条件就加什么参数。
+      也可以在searchForm上设置属性rel=”pagerForm”，js框架会自动把searchForm搜索条件复制到pagerForm中 -->
+</form>
+PF;
+        if ($return == true) {
+            return $pageForm;
+        } else {
+            echo $pageForm;
+        }
     }
 }
