@@ -75,18 +75,15 @@ class DwzGridView extends CGridView
         $this->baseScriptUrl = $assetsUrl . '/gridview';
 
         //-------------------------------------------------------------------\\
-        if($this->dataProvider===null)
-            throw new CException(Yii::t('zii','The "dataProvider" property cannot be empty.'));
+        if ($this->dataProvider === null)
+            throw new CException(Yii::t('zii', 'The "dataProvider" property cannot be empty.'));
         $dp = $this->dataProvider;
         $pageVar = $dp->pagination->pageVar;
         /**
          * 核心问题就是用POST过来的当前页面重设掉get过来的当前页面！
-         * 要赶在 $this->dataProvider->getData();之前把pageVar重设掉
-         * 而恰恰是在parent::init() 中做了这个事所以需要在parent::init() 方法之前
-         * 重设pageVar的值！！
          */
         if (isset($_POST['pageNum'])) {
-            $_GET[$pageVar] = $_POST['pageNum'] ;
+            $_GET[$pageVar] = $_POST['pageNum'];
         }
 
         //-------------------------------------------------------------------//
@@ -102,30 +99,27 @@ class DwzGridView extends CGridView
      */
     public function renderTableHeader()
     {
-        if(!$this->hideHeader)
-        {
+        if (!$this->hideHeader) {
             echo "<thead>\n";
 
-            if($this->filterPosition===self::FILTER_POS_HEADER)
+            if ($this->filterPosition === self::FILTER_POS_HEADER)
                 $this->renderFilter();
 
             echo "<tr>\n";
-            foreach($this->columns as $column){
+            foreach ($this->columns as $column) {
                 // 修改的地方
-                if(property_exists($column,'name')){
-                  //  $column->headerHtmlOptions['orderfield'] = $column->name;
+                if (property_exists($column, 'name')) {
+                    //  $column->headerHtmlOptions['orderfield'] = $column->name;
                 }
                 $column->renderHeaderCell();
             }
             echo "</tr>\n";
 
-            if($this->filterPosition===self::FILTER_POS_BODY)
+            if ($this->filterPosition === self::FILTER_POS_BODY)
                 $this->renderFilter();
 
             echo "</thead>\n";
-        }
-        elseif($this->filter!==null && ($this->filterPosition===self::FILTER_POS_HEADER || $this->filterPosition===self::FILTER_POS_BODY))
-        {
+        } elseif ($this->filter !== null && ($this->filterPosition === self::FILTER_POS_HEADER || $this->filterPosition === self::FILTER_POS_BODY)) {
             echo "<thead>\n";
             $this->renderFilter();
             echo "</thead>\n";
@@ -148,7 +142,7 @@ class DwzGridView extends CGridView
         // die($tableAttributes. __METHOD__);
 
         if ($this->dataProvider->getItemCount() > 0 || $this->showTableOnEmpty) {
-           // $this->dataProvider->getPagination()->setCurrentPage($this->dataProvider->getPagination()->currentPage-1);
+            // $this->dataProvider->getPagination()->setCurrentPage($this->dataProvider->getPagination()->currentPage-1);
             echo "<table class=\"{$this->itemsCssClass}\" {$tableAttributes} >\n";
             $this->renderTableHeader();
             ob_start();
@@ -175,22 +169,11 @@ class DwzGridView extends CGridView
     }
 
 
-    public function renderPager1()
-    {
-        //使用了clinkpagerchina组件。太阳浴血
-        $pages=$this->dataProvider->getPagination();
-        //$linkType=array('target'=>'navTab','rel'=>'art_manager');
-        echo '<div class="panelBar" style="text-align:right;padding:6px;"><span style="float:left;">'.'dddd'.'</span><span>';
-        //$this->widget('ext.dwz.DwzPager2',array('pages'=>$pages,'linkType'=>array('target'=>'navTab','rel'=>'art_manager')));
-        parent::renderPager() ;
-        echo '</span></div>';
-    }
-
     public function renderPager()
     {
         $pagination = $this->dataProvider->getPagination();
         $pagerTotalCount = $pagination->getItemCount();
-        $ts = time();
+        // $ts = time(); 这个用来调试的 ajax请求时可以看到服务器端时间戳的变更
         /* ob_start();
          parent::renderPager();
          $oldPager = ob_get_clean();
@@ -198,13 +181,12 @@ class DwzGridView extends CGridView
         $totalCount = $pagination->getItemCount();
         $numPerPage = $pagination->getPageSize();
         $pageNumShown = $pagination->getPageCount();
-        $currentPage = $pagination->getCurrentPage()+1 ;
+        $currentPage = $pagination->getCurrentPage() + 1;
 
         $pagerHtml = <<<PAGER
 <div class="panelBar">
 		<div class="pages">
 			<span>共{$pagerTotalCount}条</span>
-			<span>{$ts}</span>
 		</div>
 		<div class="pagination" targetType="navTab" totalCount="{$totalCount}" numPerPage="{$numPerPage}" pageNumShown="{$pageNumShown}" currentPage="{$currentPage}"></div>
 	</div>
@@ -221,18 +203,13 @@ PAGER;
         $url = $pagination->createPageUrl($controller, $pagination->currentPage);
 
         $dwzCurrentPageNum = 0;
-        if($_POST['pageNum']){
+        if (isset($_POST['pageNum'])) {
             $dwzCurrentPageNum = $_POST['pageNum'];
         }
-
-        $pageVar = $pagination->pageVar;
-
-        $yiiPageNum =    $_GET[$pageVar] ;
 
         $pageForm = <<<PF
 <form id="pagerForm" action="{$url}" method="post">
       <input type="hidden" name="pageNum" value="{$dwzCurrentPageNum}" />/><!--【必须】value=1可以写死-->
-        {$yiiPageNum}
       <!--【可选】其它查询条件，业务有关，有什么查询条件就加什么参数。
       也可以在searchForm上设置属性rel=”pagerForm”，js框架会自动把searchForm搜索条件复制到pagerForm中 -->
 </form>
