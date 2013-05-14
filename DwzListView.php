@@ -24,13 +24,25 @@ class DwzListView extends CListView
 
         $this->baseScriptUrl = $assetsUrl.'/listview';
 
-        parent::init();
-
+        //-------------------------------------------------------------------\\
+        if($this->dataProvider===null)
+            throw new CException(Yii::t('zii','The "dataProvider" property cannot be empty.'));
         $dp = $this->dataProvider;
         $pageVar = $dp->pagination->pageVar;
-        if (isset($_REQUEST['pageNum'])) {
-            $_GET[$pageVar] = $_REQUEST['pageNum'] ;
+        /**
+         * 核心问题就是用POST过来的当前页面重设掉get过来的当前页面！
+         * 要赶在 $this->dataProvider->getData();之前把pageVar重设掉
+         * 而恰恰是在parent::init() 中做了这个事所以需要在parent::init() 方法之前
+         * 重设pageVar的值！！
+         */
+        if (isset($_POST['pageNum'])) {
+            $_GET[$pageVar] = $_POST['pageNum'] ;
         }
+
+        //-------------------------------------------------------------------//
+
+        parent::init();
+
 
     }
 
